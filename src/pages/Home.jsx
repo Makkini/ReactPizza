@@ -1,19 +1,26 @@
 import React from 'react';
 import axios from 'axios';
+import qs from 'qs';
+
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { setCategoryId, setCurrentPage } from '../redux/slices/filterSlice';
+import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
+import { SearchContext } from '../App';
+
+import { list } from '../components/Sort';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/PizzaBlock/Skeleton';
 import Categories from '../components/Categories';
 import Sort from '../components/Sort';
 import PizzaBlock from '../components/PizzaBlock';
-import { SearchContext } from '../App';
 
 const Home = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { categoryId, sort, currentPage } = useSelector((state) => state.filter);
   const sortType = sort.sortProperty;
-
+  const isSearch = React.useRef(false);
+  const isMounted = React.useRef(false);
   //useSelector теперь любой компонент, который использует хук useSelector(), может получить доступ к состоянию фильтра, импортировав его из Redux store
 
   const { searchValue } = React.useContext(SearchContext);
@@ -23,11 +30,10 @@ const Home = () => {
   const onClickCategory = (id) => {
     dispatch(setCategoryId(id));
   };
-  const onChangePage = number =>{
-    dispatch(setCurrentPage(number))
-  }
-
-  React.useEffect(() => {
+  const onChangePage = (number) => {
+    dispatch(setCurrentPage(number));
+  };
+  const fetchPizzas = () => {
     setIsLoading(true);
     const order = sortType.includes('-') ? 'asc' : 'desc';
     const sortBy = sortType.replace('-', '');
@@ -41,8 +47,44 @@ const Home = () => {
         setItems(res.data);
         setIsLoading(false);
       });
+  };
+
+  //условие на вшивку параметров url, не вшивает при первом рендере
+  React.useEffect(() => {
+    if (isMounted.current) {
+      const queryString = qs.stringify({
+        sortProperty: sort.sortProperty,
+        categoryId,
+        currentPage,
+      });
+      navigate(`?${queryString}`);
+    }
+    isMounted.current = true;
+  }, [categoryId, sortType, currentPage]);
+  //первый рендер то прояверяем параметры url и сохраняем в редакс
+  React.useEffect(() => {
+    if (window.location.search) {
+      const params = qs.parse(window.location.search.substring(1));
+
+      const sort = list.find((obj) => obj.sortProperty === params.sortProperty);
+
+      dispatch(
+        setFilters({
+          ...params,
+          sort,
+        }),
+      );
+    }
+  }, []);
+
+  //если был первый рендер, то запрашиваем пиццы
+  React.useEffect(() => {
     window.scrollTo(0, 0);
-  }, [categoryId, sortType, searchValue, currentPage]);
+    if (!isSearch.current) {
+      fetchPizzas();
+    }
+    isSearch.current = false;
+  }, [categoryId, sort.sortProperty, searchValue, currentPage]);
 
   const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />);
   const skeletons = [...new Array(8)].map((_, index) => <Skeleton key={index} />);
