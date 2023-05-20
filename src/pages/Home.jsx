@@ -1,12 +1,14 @@
+//сторонние библиотеки
 import React from 'react';
-import axios from 'axios';
 import qs from 'qs';
-
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
-import { SearchContext } from '../App';
 
+//слайсы
+import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
+import { fetchPizzas } from '../redux/slices/pizzaSlice';
+//компоненты
+import { SearchContext } from '../App';
 import { list } from '../components/Sort';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/PizzaBlock/Skeleton';
@@ -18,14 +20,13 @@ const Home = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { categoryId, sort, currentPage } = useSelector((state) => state.filter);
+  const { items, status } = useSelector((state) => state.pizza);
+
   const sortType = sort.sortProperty;
-  const isSearch = React.useRef(false);
   const isMounted = React.useRef(false);
   //useSelector теперь любой компонент, который использует хук useSelector(), может получить доступ к состоянию фильтра, импортировав его из Redux store
 
   const { searchValue } = React.useContext(SearchContext);
-  const [items, setItems] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(true);
 
   const onClickCategory = (id) => {
     dispatch(setCategoryId(id));
@@ -33,20 +34,24 @@ const Home = () => {
   const onChangePage = (number) => {
     dispatch(setCurrentPage(number));
   };
-  const fetchPizzas = () => {
-    setIsLoading(true);
+  const getPizzas = async () => {
     const order = sortType.includes('-') ? 'asc' : 'desc';
     const sortBy = sortType.replace('-', '');
     const category = categoryId > 0 ? `category=${categoryId}` : '';
     const search = searchValue ? `&search=${searchValue}` : '';
-    axios
-      .get(
-        `https://6458ad9e4eb3f674df7a0c6e.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}${search}`,
-      )
-      .then((res) => {
-        setItems(res.data);
-        setIsLoading(false);
-      });
+
+    dispatch(
+      fetchPizzas({
+        params: {
+          sortBy,
+          order,
+          category,
+          search,
+          currentPage,
+        },
+      }),
+    );
+    window.scrollTo(0, 0);
   };
 
   //условие на вшивку параметров url, не вшивает при первом рендере
@@ -79,11 +84,7 @@ const Home = () => {
 
   //если был первый рендер, то запрашиваем пиццы
   React.useEffect(() => {
-    window.scrollTo(0, 0);
-    if (!isSearch.current) {
-      fetchPizzas();
-    }
-    isSearch.current = false;
+    getPizzas();
   }, [categoryId, sort.sortProperty, searchValue, currentPage]);
 
   const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />);
@@ -95,8 +96,17 @@ const Home = () => {
         <Sort />
       </div>
       <h2 className="content__title">Все пиццы</h2>
-      <div className="content__items">{isLoading ? skeletons : pizzas}</div>
-      <Pagination currentPage={currentPage} onChangePage={onChangePage} />
+      {status === 'error' ? (
+        <div className='content__error-info'>
+          <h2>Технические шоколадки 🍫</h2>
+          <p>Приносим свои извинения. Попробуйте повторить попытку позже.</p>
+        </div>
+      ) : (
+        <>
+          <div className="content__items">{status === 'loading' ? skeletons : pizzas}</div>
+          <Pagination currentPage={currentPage} onChangePage={onChangePage} />
+        </>
+      )}
     </div>
   );
 };
