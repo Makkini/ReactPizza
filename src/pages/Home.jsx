@@ -5,10 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 //слайсы
-import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
-import { fetchPizzas } from '../redux/slices/pizzaSlice';
+import { selectFilter, setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
+import { fetchPizzas, selectPizzaData } from '../redux/slices/pizzaSlice';
 //компоненты
-import { SearchContext } from '../App';
 import { list } from '../components/Sort';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/PizzaBlock/Skeleton';
@@ -19,14 +18,13 @@ import PizzaBlock from '../components/PizzaBlock';
 const Home = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { categoryId, sort, currentPage } = useSelector((state) => state.filter);
-  const { items, status } = useSelector((state) => state.pizza);
+  const { categoryId, sort, currentPage, searchValue } = useSelector(selectFilter);
+  const { items, status } = useSelector(selectPizzaData);
 
   const sortType = sort.sortProperty;
   const isMounted = React.useRef(false);
   //useSelector теперь любой компонент, который использует хук useSelector(), может получить доступ к состоянию фильтра, импортировав его из Redux store
 
-  const { searchValue } = React.useContext(SearchContext);
 
   const onClickCategory = (id) => {
     dispatch(setCategoryId(id));
