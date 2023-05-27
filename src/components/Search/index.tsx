@@ -5,26 +5,29 @@ import styles from './Search.module.scss';
 import { useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
-const Search = () => {
+const Search: React.FC = () => {
   const dispatch = useDispatch();
   const [value, setValue] = React.useState('');
 
-  const inputEl = React.useRef();
+  const inputEl = React.useRef<HTMLInputElement>(null);
   const onClickClear = () => {
-    inputEl.current.focus();
     dispatch(setSearchValue(''));
     setValue('');
+    inputEl.current?.focus();
   };
 
-  const updateSearchValue = React.useCallback(
-    debounce((str) => {
-      dispatch(setSearchValue(str));
-    }, 350),
-    [],
+  const updateSearchValue = React.useMemo(
+    () =>
+      debounce((str: string) => {
+        dispatch(setSearchValue(str));
+      }, 350),
+    [dispatch],
   );
-  const onChangeInput = (event) => {
-    setValue(event.target.value);
-    updateSearchValue(event.target.value);
+
+  const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    setValue(inputValue);
+    updateSearchValue(inputValue);
   };
   const location = useLocation();
   return (

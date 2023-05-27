@@ -1,34 +1,41 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setSort } from '../redux/slices/filterSlice';
-export const list = [
-  { name: 'популярности(DESC)', sortProperty: 'rating' },
-  { name: 'популярности(ASC)', sortProperty: '-rating' },
-  { name: 'цене(DESC)', sortProperty: 'price' },
-  { name: 'цене(ASC)', sortProperty: '-price' },
-  { name: 'алфавиту(DESC)', sortProperty: 'title' },
-  { name: 'алфавиту(ASC)', sortProperty: '-title' },
+import { setSort, SortPropetryEnum,  } from '../redux/slices/filterSlice';
+import { selectorSort } from '../redux/slices/filterSlice';
+
+
+type ListItem = {
+  name: string;
+  sortProperty: SortPropetryEnum
+};
+export const list: ListItem[] = [
+  { name: 'популярности(DESC)', sortProperty: SortPropetryEnum.RATING_DESC},
+  { name: 'популярности(ASC)', sortProperty: SortPropetryEnum.RATING_ASC },
+  { name: 'цене(DESC)', sortProperty: SortPropetryEnum.PRICE_DESC },
+  { name: 'цене(ASC)', sortProperty: SortPropetryEnum.PRICE_ASC },
+  { name: 'алфавиту(DESC)', sortProperty: SortPropetryEnum.TITLE_DESC},
+  { name: 'алфавиту(ASC)', sortProperty: SortPropetryEnum.TITLE_ASC},
 ];
-function Sort() {
+function SortPopup() {
   const dispatch = useDispatch();
-  const sort = useSelector((state) => state.filter.sort);
-  const sortRef = React.useRef();
+  const sort = useSelector(selectorSort);
+  const sortRef = React.useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(false);
 
-  const onClickSort = (obj) => {
+  const onClickSort = (obj: ListItem) => {
     dispatch(setSort(obj));
     setOpen(false);
   };
+
   React.useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       const path = event.composedPath();
-      if (!path.includes(sortRef.current)) {
+      if (sortRef.current && !path.includes(sortRef.current)) {
         setOpen(false);
       }
     };
     document.body.addEventListener('click', handleClickOutside);
     return () => document.body.removeEventListener('click', handleClickOutside);
-    
   }, []);
   return (
     <div ref={sortRef} className="sort">
@@ -66,4 +73,4 @@ function Sort() {
     </div>
   );
 }
-export default Sort;
+export default SortPopup;
