@@ -1,19 +1,12 @@
-//сторонние библиотеки
 import React from 'react';
 import qs from 'qs';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
-//слайсы
-import {
-  FilterSliceState,
-  selectFilter,
-  setCategoryId,
-  setCurrentPage,
-  setFilters,
-} from '../redux/slices/filterSlice';
-import { fetchPizzas, SearchPizzaParams, selectPizzaData } from '../redux/slices/pizzaSlice';
-//компоненты
+import { fetchPizzas } from '../redux/pizza/asyncActions';
+import { SearchPizzaParams } from '../redux/pizza/types';
+import { selectPizzaData } from '../redux/pizza/selectors';
+
 import { list } from '../components/Sort';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/PizzaBlock/Skeleton';
@@ -21,6 +14,8 @@ import Categories from '../components/Categories';
 import Sort from '../components/Sort';
 import PizzaBlock from '../components/PizzaBlock';
 import { useAppDispatch } from '../redux/store';
+import { selectFilter } from '../redux/filter/selectors';
+import { setCategoryId, setCurrentPage } from '../redux/filter/slice';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -32,9 +27,10 @@ const Home: React.FC = () => {
   const isMounted = React.useRef(false);
   //useSelector теперь любой компонент, который использует хук useSelector(), может получить доступ к состоянию фильтра, импортировав его из Redux store
 
-  const onClickCategory = (id: number) => {
+  const onClickCategory = React.useCallback((id: number) => {
     dispatch(setCategoryId(id));
-  };
+  }, []);
+
   const onChangePage = (page: number) => {
     dispatch(setCurrentPage(page));
   };
@@ -57,34 +53,34 @@ const Home: React.FC = () => {
   };
 
   //условие на вшивку параметров url, не вшивает при первом рендере
-//   React.useEffect(() => {
-//     if (isMounted.current) {
-//       const queryString = qs.stringify({
-//         sortProperty: sort.sortProperty,
-//         categoryId,
-//         currentPage,
-//       });
-//       navigate(`/?${queryString}`);
-//     }
-//     isMounted.current = true;
-//   }, [categoryId, sortType, currentPage]);
-//   //первый рендер то прояверяем параметры url и сохраняем в редакс
-//   React.useEffect(() => {
-//     if (window.location.search) {
-//       const params = qs.parse(window.location.search.substring(1)) as unknown as SearchPizzaParams;
+  //   React.useEffect(() => {
+  //     if (isMounted.current) {
+  //       const queryString = qs.stringify({
+  //         sortProperty: sort.sortProperty,
+  //         categoryId,
+  //         currentPage,
+  //       });
+  //       navigate(`/?${queryString}`);
+  //     }
+  //     isMounted.current = true;
+  //   }, [categoryId, sortType, currentPage]);
+  //   //первый рендер то прояверяем параметры url и сохраняем в редакс
+  //   React.useEffect(() => {
+  //     if (window.location.search) {
+  //       const params = qs.parse(window.location.search.substring(1)) as unknown as SearchPizzaParams;
 
-//       const sort = list.find((obj) => obj.sortProperty === params.sortBy);
+  //       const sort = list.find((obj) => obj.sortProperty === params.sortBy);
 
-//       dispatch(
-//         setFilters({
-//           searchValue: params.search,
-//           categoryId: Number(params.category),
-//           currentPage: Number(params.currentPage),
-//           sort: sort || list[0],
-//         }),
-//       );
-//     }
-//   }, []);
+  //       dispatch(
+  //         setFilters({
+  //           searchValue: params.search,
+  //           categoryId: Number(params.category),
+  //           currentPage: Number(params.currentPage),
+  //           sort: sort || list[0],
+  //         }),
+  //       );
+  //     }
+  //   }, []);
 
   //если был первый рендер, то запрашиваем пиццы
   React.useEffect(() => {
@@ -97,7 +93,7 @@ const Home: React.FC = () => {
     <div className="container">
       <div className="content__top">
         <Categories value={categoryId} onClickCategory={onClickCategory} />
-        <Sort />
+        <Sort value={sort} />
       </div>
       <h2 className="content__title">Все пиццы</h2>
       {status === 'error' ? (

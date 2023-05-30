@@ -1,9 +1,10 @@
 import React from 'react';
 import debounce from 'lodash.debounce';
-import { setSearchValue } from '../../redux/slices/filterSlice';
+
 import styles from './Search.module.scss';
 import { useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { setSearchValue } from '../../redux/filter/slice';
 
 const Search: React.FC = () => {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ const Search: React.FC = () => {
     updateSearchValue(inputValue);
   };
   const location = useLocation();
+
   return (
     <div className={styles.root}>
       {location.pathname !== '/cart' && (

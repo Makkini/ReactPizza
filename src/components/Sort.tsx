@@ -1,24 +1,25 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { setSort, SortPropetryEnum,  } from '../redux/slices/filterSlice';
-import { selectorSort } from '../redux/slices/filterSlice';
+import { useDispatch } from 'react-redux';
+import { setSort } from '../redux/filter/slice';
+import { Sort, SortPropetryEnum } from '../redux/filter/types';
 
 
 type ListItem = {
   name: string;
-  sortProperty: SortPropetryEnum
+  sortProperty: SortPropetryEnum;
 };
+
+type SortPopupProps = { value: Sort };
 export const list: ListItem[] = [
-  { name: 'популярности(DESC)', sortProperty: SortPropetryEnum.RATING_DESC},
+  { name: 'популярности(DESC)', sortProperty: SortPropetryEnum.RATING_DESC },
   { name: 'популярности(ASC)', sortProperty: SortPropetryEnum.RATING_ASC },
   { name: 'цене(DESC)', sortProperty: SortPropetryEnum.PRICE_DESC },
   { name: 'цене(ASC)', sortProperty: SortPropetryEnum.PRICE_ASC },
-  { name: 'алфавиту(DESC)', sortProperty: SortPropetryEnum.TITLE_DESC},
-  { name: 'алфавиту(ASC)', sortProperty: SortPropetryEnum.TITLE_ASC},
+  { name: 'алфавиту(DESC)', sortProperty: SortPropetryEnum.TITLE_DESC },
+  { name: 'алфавиту(ASC)', sortProperty: SortPropetryEnum.TITLE_ASC },
 ];
-function SortPopup() {
+const SortPopup: React.FC<SortPopupProps> = React.memo(({ value }) => {
   const dispatch = useDispatch();
-  const sort = useSelector(selectorSort);
   const sortRef = React.useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(false);
 
@@ -53,7 +54,7 @@ function SortPopup() {
           />
         </svg>
         <b>Сортировка по:</b>
-        <span onClick={() => setOpen(!open)}>{sort.name}</span>
+        <span onClick={() => setOpen(!open)}>{value.name}</span>
       </div>
       {open && (
         <div className="sort__popup">
@@ -62,7 +63,7 @@ function SortPopup() {
               <li
                 key={i}
                 onClick={() => onClickSort(obj)}
-                className={sort.sortProperty === obj.sortProperty ? 'active' : ''}
+                className={value.sortProperty === obj.sortProperty ? 'active' : ''}
               >
                 {obj.name}
               </li>
@@ -72,5 +73,5 @@ function SortPopup() {
       )}
     </div>
   );
-}
+});
 export default SortPopup;
